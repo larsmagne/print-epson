@@ -1,0 +1,25 @@
+#!/bin/bash
+
+file="$1"
+
+if [ "$file" = "" ]; then
+    echo "Usage: $0 <file>"
+    exit
+fi
+
+width=`tifftopnm "$file" 2>/dev/null | pnmfile - | awk '{ print $4; }'`
+
+if [ $width -gt 5760 ]; then
+    convert -resize 5760x "$file" /tmp/epson-print.pnm
+    file=/tmp/epson-print.pnm
+fi
+
+height=`tifftopnm "$file" 2>/dev/null | pnmfile - | awk '{ print $6; }'`
+
+echo "Size is $width x $height"
+if [ $height -gt 1440 ]; then
+    convert -resize x1440 "$file" /tmp/epson-final.pnm
+    file=/tmp/epson-final.pnm
+fi
+
+lp -o fitplot "$file"
